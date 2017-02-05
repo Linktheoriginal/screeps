@@ -1,20 +1,28 @@
 var roomSpawnTargets = [
     {
-    	role: require('roles.harvester'),
-    	target: function() {
-    		return 2;
+    	role: 'harvester',
+    	target: function(room) {
+            var structures = room.find(FIND_MY_STRUCTURES, {
+                filter: (structure) => { 
+                    return(structure.structureType == STRUCTURE_SPAWN ||
+                           structure.structureType == STRUCTURE_EXTENSION ||
+                           structure.structureType == STRUCTURE_TOWER) &&
+                           structure.energy < structure.energyCapacity;
+                }
+            });
+            return Math.ceil(structures.length / 2);
     	}
     },
     {
-    	role: require('roles.builder'), 
-    	target: function() {
+    	role: 'builder', 
+    	target: function(room) {
+    		return room.find(FIND_MY_CONSTRUCTION_SITES).length;
+    	}
+    },
+    {
+    	role: 'upgrader', 
+    	target: function(room) {
     		return 6;
-    	}
-    },
-    {
-    	role: require('roles.upgrader'), 
-    	target: function() {
-    		return 2;
     	}
     }
 ];

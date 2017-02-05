@@ -1,7 +1,8 @@
 var control = {
 	roomSpawnTargets: require('control.roomSpawnTargets'),
-	roles: require('control.roles'),
-	personalities: require('control.personalities')
+	roles: require('roles'),
+	quiet: true,
+	priorities: require('control.priority')
 };
 
 module.exports = control;

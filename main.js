@@ -1,14 +1,15 @@
 var control = require('control');
-var choosePersonality = require('personality.chooser');
-var bePersonal = require('personality');
+var creepLogic = require('creep.run');
+var spawn = require('spawn');
 
 //have a way to scale up unit bodies
 //have a way to build the base programatically
 
 module.exports.loop = function () {
-    //add functionality to existing creeps (single loop update stuff)
+    //add functionality to existing creeps (update memory)
     for (var name in Game.creeps) {
         var creep = Game.creeps[name];
+        //delete creep.memory.target;
         //creep.memory.personality = choosePersonality();
     }
 
@@ -22,33 +23,13 @@ module.exports.loop = function () {
     //run creeps
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
-        bePersonal(creep);
-        _.each(control.roles, function(role) {
-            if (creep.memory.role == role.name) {
-                role.roleClass.run(creep);
-            }
-        });
+        creepLogic.run(creep);
     }
 
     //do actions for each room
     for(var roomId in Game.rooms) {
-        //console.log(roomId);
-        var room = Game.rooms[roomId];
 
-        //order spawns in rooms as necessary
-        _.each(control.roomSpawnTargets, function(spawnTarget) {
-            var spawned = _.filter(room.find(FIND_MY_CREEPS), (creep) => creep.memory.role == spawnTarget.role.name);
-            
-            if (spawned.length < spawnTarget.target()) {
-                //console.log("room " + roomId + " has " + spawned.length + " " + spawnTarget.role.name + " of " + spawnTarget.target);
-                var availableSpawns = _.filter(room.find(FIND_MY_SPAWNS), (spawn) => spawn.canCreateCreep(spawnTarget.role.body) == OK);
-
-                if (availableSpawns.length > 0) {
-                    availableSpawns[0].createCreep(spawnTarget.role.body, undefined, {role: spawnTarget.role.name, personality: choosePersonality()});
-                    console.log("room " + roomId + " spawner " + availableSpawns[0].name + " spawning new " + spawnTarget.role.name);
-                }
-            }
-        });
+        spawn.roomSpawn(Game.rooms[roomId]);
 
         //order builds in rooms as necessary
 
