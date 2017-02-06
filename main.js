@@ -1,5 +1,6 @@
 var control = require('control');
 var creepLogic = require('creep.run');
+var towerLogic = require('tower.run');
 var spawn = require('spawn');
 
 //have a way to scale up unit bodies
@@ -24,6 +25,13 @@ module.exports.loop = function () {
     for(var name in Game.creeps) {
         var creep = Game.creeps[name];
         creepLogic.run(creep);
+    }
+
+    //run towers
+    for (var name in Game.structures) {
+        if (Game.structures[name].structureType == STRUCTURE_TOWER) {
+            towerLogic.run(Game.structures[name]);
+        }
     }
 
     //do actions for each room

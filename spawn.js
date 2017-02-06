@@ -8,11 +8,12 @@ var spawn = {
 
 		    if (spawned.length < spawnTarget.target(room)) {
 		        var role = _.filter(control.roles, (role) => role.name == spawnTarget.role)[0];
-		        var availableSpawns = _.filter(room.find(FIND_MY_SPAWNS), (spawn) => spawn.canCreateCreep(role.body(spawn.energy)) == OK);
+		        var availableSpawns = _.filter(room.find(FIND_MY_SPAWNS), (spawn) => !spawn.spawning);
 
 		        if (availableSpawns.length > 0) {
-		            availableSpawns[0].createCreep(role.body(availableSpawns[0].energy), undefined, {role: role.name, personality: personality.chooser()});
-		            console.log("spawner " + availableSpawns[0].name + " spawning new " + role.name);
+		            if (availableSpawns[0].createCreep(role.body(room.energyAvailable), undefined, {role: role.name, personality: personality.chooser()}) == OK) {
+			            console.log("spawner " + availableSpawns[0].name + " spawning new " + role.name);
+			        }
 		        }
 		    }
 		});
