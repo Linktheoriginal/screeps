@@ -10,13 +10,22 @@ var roomSpawnTargets = [
                            structure.energy < structure.energyCapacity;
                 }
             });
-            return Math.ceil(structures.length / 2);
+            if (structures.length == 1) {
+                return 1;
+            } else {
+                return Math.ceil(structures.length / 2);
+            }
     	}
     },
     {
     	role: 'builder', 
     	target: function(room) {
-    		return room.find(FIND_MY_CONSTRUCTION_SITES).length;
+    	    var buildTargets = room.find(FIND_MY_CONSTRUCTION_SITES).length;
+    	    if (buildTargets == 1) {
+    	        return 1;
+    	    } else {
+        		return Math.floor(buildTargets / 2);
+    	    }
     	}
     },
     {
@@ -24,6 +33,12 @@ var roomSpawnTargets = [
     	target: function(room) {
     		return 6;
     	}
+    },
+    {
+        role: 'repairer',
+        target: function(room) {
+            return 2;
+        }
     }
 ];
 

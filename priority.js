@@ -33,9 +33,25 @@ var priorities = {
 				return(buildPriorities.findIndex(item => item.type == a.structureType) - buildPriorities.findIndex(item => item.type == b.structureType))
 			});
 
-			return targets[utilities.randomInt(targets.length)];
+			return targets[0];
 		}
 	},
+
+    repair: function(creep) {
+        var targets = creep.room.find(FIND_STRUCTURES, {
+            filter: (structure) => {
+                return structure.hits < structure.hitsMax;
+            }
+        });
+        
+        if (targets.length > 0) {
+			targets.sort(function (a, b) {
+				return((b.hits/b.hitsMax) - (a.hits/a.hitsMax));
+			});
+
+			return targets[0];
+		}
+    },
 
 	energySource: function(creep) {
 		var sources = creep.room.find(FIND_SOURCES);

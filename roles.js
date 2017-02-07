@@ -37,6 +37,12 @@ var roles = [
     	body: function(energyAvailable) {
     		return balancedWorker(energyAvailable);
     	}
+    },
+    {
+        name: "repairer",
+        body: function(energyAvailable) {
+            return balancedWorker(energyAvailable);
+        }
     }
 ];
 

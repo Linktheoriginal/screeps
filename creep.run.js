@@ -21,6 +21,9 @@ var creepLogic = {
 			case "upgrader":
 				this.upgraderBehavior(creep);
 				break;
+			case "repairer":
+			    this.repairerBehavior(creep);
+			    break;
 		}
 
 		if (!control.quiet) {
@@ -31,6 +34,42 @@ var creepLogic = {
 			}
 		}
 	},
+
+    repairerBehavior: function (creep) {
+        if (!creep.memory.task) {
+			creep.memory.task = "harvesting";
+		}
+		
+		 if (creep.carry.energy == 0) {
+            creep.memory.task = "harvesting";
+            this.taskChanged = true;
+	    } else if (creep.memory.task == "harvesting" && creep.carry.energy == creep.carryCapacity) {
+	    	creep.memory.task = "repairing";
+	    	this.taskChanged = true;
+	    }
+	    
+	    if (this.taskChanged || !creep.memory.target) {
+	    	if (creep.memory.task == "harvesting") {
+				creep.memory.target = priority.energySource(creep).id;
+			} else {
+				var repairTarget = priority.repair(creep);
+				if (!repairTarget) {
+					creep.memory.role = "harvester";
+				} else {
+					creep.memory.target = repairTarget.id;
+				}
+			}
+	    }
+	    
+	    if (creep.memory.task == "harvesting") {
+	    	this.creepAction(creep, "harvest");
+        } else {
+            this.creepAction(creep, "repair");
+            if (Game.getObjectById(creep.memory.target).hits == Game.getObjectById(creep.memory.target).hitsMax) {
+                delete creep.memory.target;
+            }
+        }
+    },
 
 	upgraderBehavior: function (creep) {
 		if (!creep.memory.task) {
@@ -114,6 +153,8 @@ var creepLogic = {
 				if (!buildTarget) {
 					creep.memory.role = "harvester";
 				} else {
+				    //console.log(buildTarget);
+				    //creep.say("target is " + buildTarget.id);
 					creep.memory.target = buildTarget.id;
 				}
 			}
