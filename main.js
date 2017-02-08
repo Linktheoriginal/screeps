@@ -1,6 +1,6 @@
 var control = require('control');
-var creepLogic = require('creep.run');
-var towerLogic = require('tower.run');
+var creepLogic = require('logic.creep');
+var towerLogic = require('logic.tower');
 var spawn = require('spawn');
 
 //have a way to scale up unit bodies

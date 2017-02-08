@@ -1,26 +1,31 @@
 var utilities = require('utilities');
-var prioritiesList = require('control.priority');
+var control = require('control');
+var prioritiesList = control.priorities;
 
 var priorities = {
 	energy: function (creep) {
 		var energyPriorities = prioritiesList.energyPriorities;
 
 		var targets = creep.room.find(FIND_MY_STRUCTURES, {
-	        filter: (structure) => {
-	        	var type = structure.structureType;
-	            return (structure.energy < structure.energyCapacity && energyPriorities.findIndex(item => item.type == type) + 1);
-	        }
-		});
-
-		if (targets.length > 0) {
-			targets.sort(function(a, b) {
-				return (energyPriorities.findIndex(item => item.type == a.structureType) - energyPriorities.findIndex(item => item.type == b.structureType));
+		        filter: (structure) => {
+		        	var type = structure.structureType;
+		            return (structure.energy < structure.energyCapacity && energyPriorities.findIndex(item => item.type == type) + 1);
+		        }
 			});
 
-			var energyPriorityEntry = energyPriorities[energyPriorities.findIndex(item => item.type == targets[0].structureType)];
-			var topPriorityRandomizer = energyPriorityEntry.top == 0 ? targets.length : energyPriorityEntry.top;
-			topPriorityRandomizer = Math.min(topPriorityRandomizer, targets.length);
-			return targets.slice(0, topPriorityRandomizer)[utilities.randomInt(topPriorityRandomizer)];
+		if (control.priorityStrategy == "closest") {
+			return creep.pos.findClosestByRange(targets);
+		} else {
+			if (targets.length > 0) {
+				targets.sort(function(a, b) {
+					return (energyPriorities.findIndex(item => item.type == a.structureType) - energyPriorities.findIndex(item => item.type == b.structureType));
+				});
+
+				var energyPriorityEntry = energyPriorities[energyPriorities.findIndex(item => item.type == targets[0].structureType)];
+				var topPriorityRandomizer = energyPriorityEntry.top == 0 ? targets.length : energyPriorityEntry.top;
+				topPriorityRandomizer = Math.min(topPriorityRandomizer, targets.length);
+				return targets.slice(0, topPriorityRandomizer)[utilities.randomInt(topPriorityRandomizer)];
+			}
 		}
 	},
 
@@ -29,11 +34,15 @@ var priorities = {
 
 		var targets = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
 		if (targets.length > 0) {
-			targets.sort(function (a, b) {
-				return(buildPriorities.findIndex(item => item.type == a.structureType) - buildPriorities.findIndex(item => item.type == b.structureType))
-			});
+			if (control.priorityStrategy == "closest") {
+				return creep.pos.findClosestByRange(targets);
+			} else {
+				targets.sort(function (a, b) {
+					return(buildPriorities.findIndex(item => item.type == a.structureType) - buildPriorities.findIndex(item => item.type == b.structureType))
+				});
 
-			return targets[0];
+				return targets[0];
+			}
 		}
 	},
 
@@ -44,12 +53,16 @@ var priorities = {
             }
         });
         
-        if (targets.length > 0) {
-			targets.sort(function (a, b) {
-				return((b.hits/b.hitsMax) - (a.hits/a.hitsMax));
-			});
+        if (control.priorityStrategy == "closest") {
+			return creep.pos.findClosestByRange(targets);
+		} else {
+	        if (targets.length > 0) {
+				targets.sort(function (a, b) {
+					return((b.hits/b.hitsMax) - (a.hits/a.hitsMax));
+				});
 
-			return targets[0];
+				return targets[0];
+			}
 		}
     },
 
