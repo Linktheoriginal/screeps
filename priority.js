@@ -6,12 +6,23 @@ var priorities = {
 	energy: function (creep) {
 		var energyPriorities = prioritiesList.energyPriorities;
 
-		var targets = creep.room.find(FIND_MY_STRUCTURES, {
-		        filter: (structure) => {
-		        	var type = structure.structureType;
-		            return (structure.energy < structure.energyCapacity && energyPriorities.findIndex(item => item.type == type) + 1);
-		        }
-			});
+		var structureTargets = creep.room.find(FIND_MY_STRUCTURES, {
+		    filter: (structure) => {
+		      	var type = structure.structureType;
+		        return (structure.energy < structure.energyCapacity && 
+		          	    energyPriorities.findIndex(item => item.type == type) + 1);
+		    }
+		});
+
+		var creepTargets = creep.room.find(FIND_MY_CREEPS, {
+			filter: (creep) => {
+				var role = creep.memory.role;
+		        return (creep.carry.energy < creep.carryCapacity && 
+		           	    energyPriorities.findIndex(item => item.role == role) + 1);
+			}
+		});
+
+		var targets = structureTargets.concat(creepTargets);
 
 		if (control.priorityStrategy == "closest") {
 			return creep.pos.findClosestByRange(targets);

@@ -11,9 +11,19 @@ var creepLogic = {
 			creep.memory.role = "harvester";
 		}
 
+		if (creep.carry.energy < creep.carryCapacity) {
+			var freeEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
+			for (var energy in freeEnergy) {
+				creep.pickup(freeEnergy[energy]);
+			}
+		}
+
 		switch (creep.memory.role) {
 			case "harvester":
 				this.harvesterBehavior(creep);
+				break;
+			case "heavyHarvester":
+				this.heavyHarvesterBehavior(creep);
 				break;
 			case "builder":
 				this.builderBehavior(creep);
@@ -24,6 +34,12 @@ var creepLogic = {
 			case "repairer":
 			    this.repairerBehavior(creep);
 			    break;
+			case "heavyUpgrader":
+				this.heavyUpgraderBehavior(creep);
+				break;
+			case "transporter":
+				this.transporterBehavior(creep);
+				break;
 		}
 
 		if (!control.quiet) {
@@ -35,12 +51,42 @@ var creepLogic = {
 		}
 	},
 
+	transporterBehavior: function (creep) {
+		if (creep.carry.energy < creep.carryCapacity) {
+			creep.memory.target = priority.energySource(creep).id;
+		} else {
+			creep.memory.target = priority.energy(creep).id;
+		}
+		creep.moveTo(Game.getObjectById(creep.memory.target));
+		this.creepAction(creep, "transfer");
+	},
+
+	heavyHarvesterBehavior: function (creep) {
+		if (!creep.memory.target) {
+			creep.memory.target = priority.energySource(creep).id;
+		}
+		if (creep.carry.energy > 0) {
+			this.creepAction(creep, "handoff");
+		}
+		this.creepAction(creep, "harvest");
+	},
+
+	heavyUpgraderBehavior: function (creep) {
+		if (true){ //!creep.memory.target) {
+			creep.memory.target = creep.room.controller.id;
+		}
+		if (creep.carry.energy < creep.carryCapacity) {
+			this.creepAction(creep, "steal");
+		}
+		this.creepAction(creep, "upgradeController");
+	},
+
     repairerBehavior: function (creep) {
         if (!creep.memory.task) {
 			creep.memory.task = "harvesting";
 		}
 		
-		 if (creep.carry.energy == 0) {
+		if (creep.carry.energy == 0) {
             creep.memory.task = "harvesting";
             this.taskChanged = true;
 	    } else if (creep.memory.task == "harvesting" && creep.carry.energy == creep.carryCapacity) {
@@ -179,6 +225,19 @@ var creepLogic = {
 					if (actionResult == OK || actionResult == ERR_FULL || actionResult == ERR_INVALID_TARGET) {
 						delete creep.memory.target;
 						moveToTarget = false;
+					}
+					break;
+				case "handoff":
+					var handoffTargets = creep.pos.findInRange(FIND_MY_CREEPS, 1);
+					for (var target in handoffTargets) {
+						target = handoffTargets[target];
+						creep.transfer(target, RESOURCE_ENERGY);
+					}
+					break;
+				case "steal":
+					var stealTargets = creep.pos.findInRange(FIND_MY_CREEPS, 1);
+					for (var target in stealTargets) {
+						stealTargets[target].transfer(creep, RESOURCE_ENERGY);
 					}
 					break;
 				default:

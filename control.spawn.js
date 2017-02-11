@@ -32,11 +32,29 @@ var spawnControls = {
         {
             role: 'upgrader', 
             target: function(room) {
-                return 6;
+                return 2;
             }
         },
         {
             role: 'repairer',
+            target: function(room) {
+                return 0;
+            }
+        },
+        {
+            role: 'heavyHarvester',
+            target: function(room) {
+                return 2;
+            }
+        },
+        {
+            role: 'transporter',
+            target: function(room) {
+                return 2;
+            }
+        },
+        {
+            role: 'heavyUpgrader',
             target: function(room) {
                 return 2;
             }
@@ -46,7 +64,10 @@ var spawnControls = {
         "harvester",
         "upgrader",
         "builder",
-        "repairer"
+        "repairer",
+        "heavyHarvester",
+        "transporter",
+        "heavyUpgrader"
     ]
 };
 

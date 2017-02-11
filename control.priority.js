@@ -3,6 +3,7 @@ var priorities = {
 		{type: STRUCTURE_SPAWN, top: 1},
 		{type: STRUCTURE_EXTENSION, top: 1},
 		{type: STRUCTURE_TOWER, top: 0},
+		{role: "heavyUpgrader", top: 0},
 		{type: STRUCTURE_CONTAINER, top: 0}
 	],
 	buildPriorities: [
