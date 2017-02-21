@@ -3,8 +3,9 @@ var creepLogic = require('logic.creep');
 var towerLogic = require('logic.tower');
 var spawn = require('spawn');
 
-//have a way to scale up unit bodies
-//have a way to build the base programatically
+function creepByName(name) {
+    console.log("test");
+}
 
 module.exports.loop = function () {
     //add functionality to existing creeps (update memory)

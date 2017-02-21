@@ -1,4 +1,4 @@
-var utilities = require('utilities');
+var utilities = require('utils');
 var control = require('control');
 var prioritiesList = control.priorities;
 

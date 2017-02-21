@@ -1,4 +1,4 @@
-var utilities = require('utilities');
+var utilities = require('utils');
 
 var personalities = [
 	{

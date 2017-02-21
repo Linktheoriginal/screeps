@@ -1,4 +1,3 @@
-
 var towerLogic = {
 	run: function(tower) {
 		var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
