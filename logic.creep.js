@@ -3,12 +3,11 @@ var personality = require('personality');
 var priority = require('priority');
 
 var creepLogic = {
-	taskChanged: false,
 
 	run: function(creep) {
-		this.taskChanged = false;
 		if (!creep.memory.role) {
-			creep.memory.role = "harvester";
+			creep.say("Forgot?!?!")
+			creep.memory.role = "transporter";
 		}
 
 		if (creep.carry.energy < creep.carryCapacity) {
@@ -22,9 +21,6 @@ var creepLogic = {
 			case "harvester":
 				this.harvesterBehavior(creep);
 				break;
-			case "heavyHarvester":
-				this.heavyHarvesterBehavior(creep);
-				break;
 			case "builder":
 				this.builderBehavior(creep);
 				break;
@@ -34,243 +30,138 @@ var creepLogic = {
 			case "repairer":
 			    this.repairerBehavior(creep);
 			    break;
-			case "heavyUpgrader":
-				this.heavyUpgraderBehavior(creep);
-				break;
-			case "heavyBuilder":
-				this.heavyBuilderBehavior(creep);
-				break;
 			case "transporter":
 				this.transporterBehavior(creep);
 				break;
 		}
 
 		if (!control.quiet) {
-			if (this.taskChanged) {
-				creep.say(creep.memory.task);
-			} else {
-				personality(creep);
-			}
+			personality(creep);
 		}
 	},
 
 	transporterBehavior: function (creep) {
-		if (creep.carry.energy < creep.carryCapacity) {
-			creep.memory.target = priority.energySource(creep).id;
-		} else {
-			creep.memory.target = priority.energy(creep).id;
+		//delete creep.memory.target;
+		if (!creep.memory.task) {
+			creep.memory.task = "fetch";
 		}
-		creep.moveTo(Game.getObjectById(creep.memory.target));
-		this.creepAction(creep, "transfer");
-	},
 
-	heavyHarvesterBehavior: function (creep) {
+		if (creep.carry.energy == 0 && creep.memory.task == "deliver") {
+			delete creep.memory.target;
+			creep.memory.task = "fetch";
+		} else if (creep.carry.energy == creep.carryCapacity && creep.memory.task == "fetch") {
+			delete creep.memory.target;
+			creep.memory.task = "deliver";
+		}
+
 		if (!creep.memory.target) {
-			creep.memory.target = priority.energySource(creep).id;
-		}
-		if (creep.carry.energy > 0) {
-			this.creepAction(creep, "handoff");
-		}
-		this.creepAction(creep, "harvest");
-	},
-
-	heavyBuilderBehavior: function (creep) {
-		if (!creep.memory.target) {
-			creep.memory.target = priority.build(creep).id;
-		}
-		if (creep.carry.energy > 0) {
-			this.creepAction(creep, "steal");
-		}
-		this.creepAction(creep, "build");
-	},
-
-	heavyUpgraderBehavior: function (creep) {
-		if (true){ //!creep.memory.target) {
-			creep.memory.target = creep.room.controller.id;
-		}
-		if (creep.carry.energy < creep.carryCapacity) {
-			this.creepAction(creep, "steal");
-		}
-		this.creepAction(creep, "upgradeController");
-	},
-
-    repairerBehavior: function (creep) {
-        if (!creep.memory.task) {
-			creep.memory.task = "harvesting";
-		}
-		
-		if (creep.carry.energy == 0 && creep.memory.task != "harvesting") {
-            creep.memory.task = "harvesting";
-            this.taskChanged = true;
-	    } else if (creep.memory.task == "harvesting" && creep.carry.energy == creep.carryCapacity) {
-	    	creep.memory.task = "repairing";
-	    	this.taskChanged = true;
-	    }
-	    
-	    if (this.taskChanged || !creep.memory.target) {
-	    	if (creep.memory.task == "harvesting") {
-				creep.memory.target = priority.energySource(creep).id;
+			if (creep.memory.task == "deliver") {
+				var deliveryTarget = priority.energySink(creep);
+				if (deliveryTarget) {
+					creep.memory.target = deliveryTarget.id;
+				}
 			} else {
-				var repairTarget = priority.repair(creep);
-				if (!repairTarget) {
-					creep.memory.role = "harvester";
-				} else {
-					creep.memory.target = repairTarget.id;
+				var fetchTarget = priority.energySource(creep);
+				if (fetchTarget) {
+					creep.memory.target = fetchTarget.id;
 				}
 			}
-	    }
-	    
-	    if (creep.memory.task == "harvesting") {
-	    	this.creepAction(creep, "harvest");
-        } else {
-            this.creepAction(creep, "repair");
-            if (Game.getObjectById(creep.memory.target).hits == Game.getObjectById(creep.memory.target).hitsMax) {
-                delete creep.memory.target;
-            }
-        }
-    },
-
-	upgraderBehavior: function (creep) {
-		if (!creep.memory.task) {
-			creep.memory.task = "harvesting";
 		}
 
-        if (creep.carry.energy == 0 && creep.memory.task != "harvesting") {
-            creep.memory.task = "harvesting";
-            this.taskChanged = true;
-	    } else if (creep.memory.task == "harvesting" && creep.carry.energy == creep.carryCapacity) {
-	    	creep.memory.task = "upgrading";
-	    	this.taskChanged = true;
-	    }
-
-	    if (this.taskChanged || !creep.memory.target) {
-	    	if (creep.memory.task == "harvesting") {
-				creep.memory.target = priority.energySource(creep).id;
+		if (creep.memory.task == "deliver") {
+			var actionResult = creep.transfer(Game.getObjectById(creep.memory.target), RESOURCE_ENERGY);
+			if (actionResult == OK || actionResult == ERR_FULL || actionResult == ERR_INVALID_TARGET) {
+				delete creep.memory.target;
 			} else {
-				creep.memory.target = creep.room.controller.id;
+				moveToTarget(creep);
 			}
-	    }
-
-	    if (creep.memory.task == "harvesting") {
-	    	this.creepAction(creep, "harvest");
-        } else {
-            this.creepAction(creep, "upgradeController");
-        }
+		} else {
+			moveToTarget(creep);
+		}
 	},
 
 	harvesterBehavior: function (creep) {
-		if (!creep.memory.task) {
-			creep.memory.task = "harvesting";
+		//delete creep.memory.target;
+		if (!creep.memory.target) {
+			creep.memory.target = priority.harvest(creep).id;
 		}
-
-		if (creep.carry.energy == 0 && creep.memory.task != "harvesting") {
-			creep.memory.task = "harvesting";
-			this.taskChanged = true;
-		} else if (creep.memory.task == "harvesting" && creep.carry.energy == creep.carryCapacity) {
-			creep.memory.task = "delivering";
-			this.taskChanged = true;
-		}
-
-		if (this.taskChanged || !creep.memory.target) {
-			if (creep.memory.task == "harvesting") {
-				creep.memory.target = priority.energySource(creep).id;
-			} else {
-				var transferTarget = priority.energy(creep);
-				if (!transferTarget) {
-					creep.memory.role = "upgrader";
-				} else {
-					creep.memory.target = priority.energy(creep).id;
+		if (creep.carry.energy > 0) {
+			var handoffTargets = creep.pos.findInRange(FIND_MY_CREEPS, 1, {
+				filter: function(creep) {
+					return creep.memory.role == "transporter";
 				}
+			});
+			if (handoffTargets.length > 0) {
+				creep.transfer(handoffTargets[0], RESOURCE_ENERGY);
 			}
 		}
-
-		if (creep.memory.task == "harvesting") {
-            this.creepAction(creep, "harvest");
-        } else {
-            this.creepAction(creep, "transfer");
-        }
+		creepAction(creep, "harvest");
 	},
 
-	builderBehavior: function(creep) {
-		if (!creep.memory.task) {
-			creep.memory.task = "harvesting";
-		}
-
-		if (creep.carry.energy == 0 && creep.memory.task != "harvesting") {
-			creep.memory.task = "harvesting";
-			this.taskChanged = true
-		} else if (creep.memory.task == "harvesting" && creep.carry.energy == creep.carryCapacity) {
-			creep.memory.task = "building";
-			this.taskChanged = true;
-		}
-
-		if (this.taskChanged || !creep.memory.target) {
-			if (creep.memory.task == "harvesting") {
-				creep.memory.target = priority.energySource(creep).id;
+	builderBehavior: function (creep) {
+		if (!creep.memory.target) {
+			var buildTarget = priority.build(creep);
+			if (!buildTarget) {
+				creep.say("No build sites.")
+				delete creep.memory.role;
 			} else {
-				var buildTarget = priority.build(creep);
-				if (!buildTarget) {
-					creep.memory.role = "harvester";
-				} else {
-				    //console.log(buildTarget);
-				    //creep.say("target is " + buildTarget.id);
-					creep.memory.target = buildTarget.id;
-				}
+				creep.memory.target = buildTarget.id;
 			}
 		}
+		creepAction(creep, "build");
+	},
 
-	    if (creep.memory.task == "harvesting") {
-	    	this.creepAction(creep, "harvest");
-	    } else {
-	        this.creepAction(creep, "build");
+	upgraderBehavior: function (creep) {
+		if (!creep.memory.target) {
+			creep.memory.target = creep.room.controller.id;
+		}
+		creepAction(creep, "upgradeController");
+	},
+
+    repairerBehavior: function (creep) {
+		if (creep.memory.target && Game.getObjectById(creep.memory.target).hits == Game.getObjectById(creep.memory.target).hitsMax) {
+			delete creep.memory.target;
+		}    
+	    if (!creep.memory.target) {
+			var repairTarget = priority.repair(creep);
+			if (!repairTarget) {
+				delete creep.memory.role;
+			} else {
+				creep.memory.target = repairTarget.id;
+			}
 	    }
-	},
+		creepAction(creep, "repair");
+    }
+};
 
-	creepAction: function(creep, action) {
-		var moveToTarget = true;
-		var actionResult;
-
-		if (creep.memory.target) {
-			switch (action) {
-				case "transfer":
-					actionResult = creep.transfer(Game.getObjectById(creep.memory.target), RESOURCE_ENERGY);
-					
-					if (actionResult == OK || actionResult == ERR_FULL || actionResult == ERR_INVALID_TARGET) {
-						delete creep.memory.target;
-						moveToTarget = false;
-					}
-					break;
-				case "handoff":
-					var handoffTargets = creep.pos.findInRange(FIND_MY_CREEPS, 1);
-					for (var target in handoffTargets) {
-						target = handoffTargets[target];
-						creep.transfer(target, RESOURCE_ENERGY);
-					}
-					break;
-				case "steal":
-					var stealTargets = creep.pos.findInRange(FIND_MY_CREEPS, 1);
-					for (var target in stealTargets) {
-						stealTargets[target].transfer(creep, RESOURCE_ENERGY);
-					}
-					break;
-				default:
-					actionResult = creep[action](Game.getObjectById(creep.memory.target));
-					if (actionResult == OK) {
-						moveToTarget = false;
-					} else if (actionResult == ERR_INVALID_TARGET) {
-						creep.say("!2");
-						delete creep.memory.target;
-					}
-			}
-		}
-
-		if (moveToTarget) {
-			if (creep.moveTo(Game.getObjectById(creep.memory.target)) == ERR_INVALID_TARGET) {
-				creep.say("!1");
+function creepAction(creep, action) {
+	if (creep.memory.target) {
+		var actionResult = creep[action](Game.getObjectById(creep.memory.target));
+		//console.log(actionResult + " " + creep.memory.role);
+		switch(actionResult) {
+			case ERR_INVALID_TARGET:
+				creep.say("BadTarget");
 				delete creep.memory.target;
-			}
+				break;
+			case ERR_NOT_ENOUGH_ENERGY:
+			case ERR_NOT_IN_RANGE:
+				if (!moveToTarget(creep)) {
+					creep.say("BadMove");
+					delete creep.memory.target;
+				}
+				break;
+			default:
+				break;
 		}
 	}
+};
+
+function moveToTarget(creep) {
+	var actionResult = creep.moveTo(Game.getObjectById(creep.memory.target));
+	if (actionResult == ERR_INVALID_TARGET) {
+		return false;
+	}
+	return true;
 };
 
 module.exports = creepLogic;

@@ -3,7 +3,7 @@ var control = require('control');
 var prioritiesList = control.priorities;
 
 var priorities = {
-	energy: function (creep) {
+	energySink: function (creep) {
 		var energyPriorities = prioritiesList.energyPriorities;
 
 		var structureTargets = creep.room.find(FIND_MY_STRUCTURES, {
@@ -78,8 +78,18 @@ var priorities = {
     },
 
 	energySource: function(creep) {
-		var sources = creep.room.find(FIND_SOURCES);
+		var sources = creep.room.find(FIND_MY_CREEPS, {
+			filter: function(creep) {
+				return creep.memory.role == "harvester";
+			}
+		});
 		return sources[utilities.randomInt(sources.length)];
+	},
+
+	harvest: function(creep) {
+		return creep.room.find(FIND_SOURCES).sort(function (a, b) {
+			return utilities.creepsByTarget(creep.room, a.id).length - utilities.creepsByTarget(creep.room, b.id).length;
+		})[0];
 	}
 }
 

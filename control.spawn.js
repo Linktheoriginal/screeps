@@ -1,118 +1,74 @@
+var utils = require('utils');
+
 var spawnControls = {
     roomLimit: 10,
     currentCreepCount: function(room) {
-        
-    }
+        return room.find(FIND_MY_CREEPS).length();
+    },
     roomSpawnTargets: [
         {
             role: 'harvester',
-            target: function(room) {
+            shouldSpawn: function(room) {
+                var harvesters = utils.creepsByRole(room, "harvester");
 
-
-                if (room.find(FIND_MY_CREEPS, {
-                        filter: (creep) => {
-                            return (creep.memory.role == "heavyHarvester");
-                        }
-                    }).length > 1) {
-                        return 0;
+                var availableHarvestPositions = 0;
+                var sources = room.find(FIND_SOURCES)
+                for (var source in sources) {
+                    source = sources[source];
+                    availableHarvestPositions += utils.valueCountIn2DArray(utils.adjacent(room, source.pos, 1, "open"), true);
                 }
 
-                var structures = room.find(FIND_MY_STRUCTURES, {
-                    filter: (structure) => { 
-                        return(structure.structureType == STRUCTURE_SPAWN ||
-                               structure.structureType == STRUCTURE_EXTENSION ||
-                               structure.structureType == STRUCTURE_TOWER) &&
-                               structure.energy < structure.energyCapacity;
-                    }
-                });
-                
-                if (structures.length == 1) {
-                    return 1;
+                if (harvesters.length >= utils.creepsByRole(room, "transporter").length || availableHarvestPositions <= harvesters.length) {
+                    return false;
                 } else {
-                    return Math.min(Math.ceil(structures.length / 2), 5);
+                    var numWorkParts = utils.sumBodyParts(harvesters, WORK);
+                    return numWorkParts < room.find(FIND_SOURCES).length * 5;
                 }
             }
         },
         {
             role: 'builder', 
-            target: function(room) {
-                
-                if (room.find(FIND_MY_CREEPS, {
-                        filter: (creep) => {
-                            return (creep.memory.role == "heavyBuilder");
-                        }
-                    }).length > 1) {
-                        return 0;
-                }
-                
-                var buildTargets = room.find(FIND_MY_CONSTRUCTION_SITES).length;
-                if (buildTargets == 1) {
-                    return 1;
-                } else {
-                    return Math.min(Math.floor(buildTargets / 2), 4);
-                }
-            }
-        },
-        {
-            role: 'upgrader', 
-            target: function(room) {
-                if (room.find(FIND_MY_CREEPS, {
-                        filter: (creep) => {
-                            return (creep.memory.role == "heavyUpgrader");
-                        }
-                    }).length > 1) {
-                        return 0;
+            shouldSpawn: function(room) {
+                var buildTargets = room.find(FIND_MY_CONSTRUCTION_SITES);
+                var totalEffort = 0;
+                for (var target in buildTargets) {
+                    target = buildTargets[target];
+                    totalEffort += target.progressTotal - target.progress;
                 }
 
-                return 2;
+                return totalEffort > (utils.creepRoleCount(room, "builder") * 3000);
             }
         },
         {
             role: 'repairer',
-            target: function(room) {
-                if (room.find(FIND_MY_CREEPS, {
-                        filter: (creep) => {
-                            return (creep.memory.role == "heavyRepairer");
-                        }
-                    }).length > 1) {
-                        return 0;
-                }
-                return 2;
-            }
-        },
-        {
-            role: 'heavyHarvester',
-            target: function(room) {
-                return 2;
-            }
-        },
-        {
-            role: 'heavyBuilder',
-            target: function(room) {
-                return 1;
+            shouldSpawn: function(room) {
+                var numRepairTargets = room.find(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return structure.hits < structure.hitsMax;
+                    }
+                }).length;
+                return numRepairTargets > (utils.creepRoleCount(room, "repairer") * 4);
             }
         },
         {
             role: 'transporter',
-            target: function(room) {
-                return 2;
+            shouldSpawn: function(room) {
+                return utils.creepRoleCount(room, "transporter") < utils.creepRoleCount(room, "harvester");
             }
         },
         {
-            role: 'heavyUpgrader',
-            target: function(room) {
-                return 2;
+            role: 'upgrader',
+            shouldSpawn: function(room) {
+                return utils.creepRoleCount(room, "upgrader") < 1;
             }
         }
     ],
     spawnPriorities: [
         "harvester",
+        "transporter",
         "upgrader",
         "builder",
-        "repairer",
-        "heavyHarvester",
-        "transporter",
-        "heavyUpgrader"
+        "repairer"
     ]
 };
 

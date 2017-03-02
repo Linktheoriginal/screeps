@@ -2,6 +2,7 @@ var control = require('control');
 var creepLogic = require('logic.creep');
 var towerLogic = require('logic.tower');
 var spawn = require('spawn');
+var planner = require('planner');
 
 function creepByName(name) {
     console.log("test");
@@ -41,6 +42,11 @@ module.exports.loop = function () {
         spawn.roomSpawn(Game.rooms[roomId]);
 
         //order builds in rooms as necessary
+console.log(Game.time);
+        if (Game.time % 10 == 0) {
+            planner.roadPlanner.planRoads(Game.rooms[roomId]);
+            planner.extensionPlanner.planExtensions(Game.rooms[roomId]);
+        }
 
     }
 }

@@ -1,12 +1,13 @@
 filters = {
 	walkable: function(lookAtObject) {
-		return (object.type == 'structure' && object.structure.structureType != STRUCTURE_ROAD)
-			|| (object.type == 'terrain' && object.terrain == 'wall');
+		return (lookAtObject.type == 'structure' && lookAtObject.structure.structureType != STRUCTURE_ROAD)
+			|| (lookAtObject.type == 'terrain' && lookAtObject.terrain == 'wall');
 	},
 	open: function(lookAtObject) {
-		return (object.type == 'creep' 
-			|| object.type == 'structure' 
-			|| (object.type == 'terrain' && object.terrain == 'wall'));
+		return (lookAtObject.type == 'creep' 
+			|| lookAtObject.type == 'structure'
+			|| lookAtObject.type == 'constructionSite'
+			|| (lookAtObject.type == 'terrain' && lookAtObject.terrain == 'wall'));
 	}
 };
 
