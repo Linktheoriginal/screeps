@@ -42,12 +42,19 @@ var spawnControls = {
         {
             role: 'repairer',
             shouldSpawn: function(room) {
-                var numRepairTargets = room.find(FIND_STRUCTURES, {
+                var repairTargets = room.find(FIND_STRUCTURES, {
                     filter: (structure) => {
                         return structure.hits < structure.hitsMax;
                     }
-                }).length;
-                return numRepairTargets > (utils.creepRoleCount(room, "repairer") * 4);
+                });
+
+                var repairTotal = 0;
+                for (var target in repairTargets) {
+                    target = repairTargets[target];
+                    repairTotal += target.hitsMax - target.hits;
+                }
+
+                return repairTotal > (utils.creepRoleCount(room, "repairer") * 3000);
             }
         },
         {

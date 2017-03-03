@@ -42,7 +42,6 @@ module.exports.loop = function () {
         spawn.roomSpawn(Game.rooms[roomId]);
 
         //order builds in rooms as necessary
-console.log(Game.time);
         if (Game.time % 10 == 0) {
             planner.roadPlanner.planRoads(Game.rooms[roomId]);
             planner.extensionPlanner.planExtensions(Game.rooms[roomId]);
