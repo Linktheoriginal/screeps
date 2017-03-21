@@ -1,9 +1,11 @@
 var control = {
 	spawn: require('control.spawn'),
-	roles: require('roles'),
+	roles: require('control.roles'),
 	quiet: true,
-	priorityStrategy: "",//closest",
-	priorities: require('control.priority')
+	warParty: require('control.warparty'),
+	towerRepair: false,
+	towerEmergencyRepair: true,
+	logCPU: false
 };
 
 module.exports = control;

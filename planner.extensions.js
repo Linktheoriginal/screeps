@@ -33,24 +33,37 @@ var extensionPlanner = {
     }
 };
 
-//fix this to be breadth-first later
 function checkerBoard(room, pos) {
-    var pattern = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
-    for (var location in pattern) {
-        location = pattern[location];
-        if (utils.open(room, pos.x + location[0], pos.y + location[1])) {
-            var foundPos = pos;
-            foundPos.x += location[0];
-            foundPos.y += location[1];
-            return foundPos;
-        };
-    }
-    for (var location in pattern) {
-        location = pattern[location];
-        var newPos = pos;
-        newPos.x += location[0];
-        newPos.y += location[1];
-        return checkerBoard(room, newPos);
+    var depth = 0;
+    var pattern = [
+        {x: -1, y: -1}, 
+        {x: -1, y: 1},
+        {x: 1, y: -1},
+        {x: 1, y: 1}
+    ];
+    var locations = [{
+        x: pos.x,
+        y: pos.y
+    }];
+
+    while (depth < 10) {
+        var newLocations = [];
+        for (var location in locations) {
+            location = locations[location];
+             if (utils.open(room, location.x, location.y)) {
+                return location;
+            } else {
+                for (var patternStep in pattern) {
+                    patternStep = pattern[patternStep];
+                    newLocations.push({
+                        x: location.x + patternStep.x,
+                        y: location.y + patternStep.y
+                    });
+                }
+            }
+        }
+        locations = newLocations;
+        depth = depth + 1;
     }
 };
 
